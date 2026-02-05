@@ -1,0 +1,40 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: soctalk
+
+  # PostgreSQL
+  # API
+  # Frontend
+  # Orchestrator
+resources:
+- namespace.yaml
+- postgres/configmap.yaml
+- postgres/service.yaml
+- postgres/statefulset.yaml
+- api/configmap.yaml
+- api/service.yaml
+- api/deployment.yaml
+- frontend/configmap.yaml
+- frontend/service.yaml
+- frontend/deployment.yaml
+- orchestrator/configmap.yaml
+- orchestrator/deployment.yaml
+
+# Placeholder images - override in overlays with actual registry
+images:
+- name: REGISTRY/soctalk-api
+  newName: REGISTRY/soctalk-api
+  newTag: latest
+- name: REGISTRY/soctalk-frontend
+  newName: REGISTRY/soctalk-frontend
+  newTag: latest
+- name: REGISTRY/soctalk-orchestrator
+  newName: REGISTRY/soctalk-orchestrator
+  newTag: latest
+
+labels:
+- includeSelectors: true
+  pairs:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/part-of: soctalk

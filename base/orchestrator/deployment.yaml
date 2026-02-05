@@ -1,0 +1,181 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orchestrator
+  labels:
+    app.kubernetes.io/name: orchestrator
+    app.kubernetes.io/component: worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: orchestrator
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: orchestrator
+        app.kubernetes.io/component: worker
+    spec:
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
+      containers:
+        - name: orchestrator
+          image: REGISTRY/soctalk-orchestrator:latest
+          env:
+            # Database URL from secret
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: soctalk-db-secrets
+                  key: DATABASE_URL
+            - name: SOCTALK_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: soctalk-db-secrets
+                  key: DATABASE_URL
+            # LLM API keys from secret
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: soctalk-llm-secrets
+                  key: ANTHROPIC_API_KEY
+                  optional: true
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: soctalk-llm-secrets
+                  key: OPENAI_API_KEY
+                  optional: true
+            - name: ANTHROPIC_BASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: soctalk-llm-secrets
+                  key: ANTHROPIC_BASE_URL
+                  optional: true
+            # Wazuh credentials
+            - name: WAZUH_API_USER
+              valueFrom:
+                secretKeyRef:
+                  name: soctalk-soc-secrets
+                  key: WAZUH_API_USER
+                  optional: true
+            - name: WAZUH_API_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: soctalk-soc-secrets
+                  key: WAZUH_API_PASSWORD
+                  optional: true
+            - name: WAZUH_URL
+              valueFrom:
+                secretKeyRef:
+                  name: soctalk-soc-secrets
+                  key: WAZUH_URL
+                  optional: true
+            # Wazuh Indexer credentials
+            - name: WAZUH_INDEXER_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: soctalk-soc-secrets
+                  key: WAZUH_INDEXER_HOST
+                  optional: true
+            - name: WAZUH_INDEXER_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: soctalk-soc-secrets
+                  key: WAZUH_INDEXER_PORT
+                  optional: true
+            - name: WAZUH_INDEXER_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: soctalk-soc-secrets
+                  key: WAZUH_INDEXER_USERNAME
+                  optional: true
+            - name: WAZUH_INDEXER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: soctalk-soc-secrets
+                  key: WAZUH_INDEXER_PASSWORD
+                  optional: true
+            # Cortex credentials
+            - name: CORTEX_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: soctalk-soc-secrets
+                  key: CORTEX_API_KEY
+                  optional: true
+            - name: CORTEX_URL
+              valueFrom:
+                secretKeyRef:
+                  name: soctalk-soc-secrets
+                  key: CORTEX_URL
+                  optional: true
+            # TheHive credentials
+            - name: THEHIVE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: soctalk-soc-secrets
+                  key: THEHIVE_API_KEY
+                  optional: true
+            - name: THEHIVE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: soctalk-soc-secrets
+                  key: THEHIVE_URL
+                  optional: true
+            # MISP credentials
+            - name: MISP_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: soctalk-soc-secrets
+                  key: MISP_API_KEY
+                  optional: true
+            - name: MISP_URL
+              valueFrom:
+                secretKeyRef:
+                  name: soctalk-soc-secrets
+                  key: MISP_URL
+                  optional: true
+            # Slack webhook
+            - name: SLACK_WEBHOOK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: soctalk-soc-secrets
+                  key: SLACK_WEBHOOK_URL
+                  optional: true
+            # Slack HIL (Socket Mode)
+            - name: SLACK_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: soctalk-soc-secrets
+                  key: SLACK_BOT_TOKEN
+                  optional: true
+            - name: SLACK_APP_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: soctalk-soc-secrets
+                  key: SLACK_APP_TOKEN
+                  optional: true
+          envFrom:
+            - configMapRef:
+                name: orchestrator-config
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      initContainers:
+        - name: wait-for-postgres
+          image: postgres:16-alpine
+          command:
+            - sh
+            - -c
+            - |
+              until pg_isready -h postgres -p 5432 -U soctalk; do
+                echo "Waiting for PostgreSQL..."
+                sleep 2
+              done
+              echo "PostgreSQL is ready"

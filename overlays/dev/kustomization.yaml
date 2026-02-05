@@ -1,0 +1,68 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: soctalk
+
+resources:
+- ../../base
+
+# Generate secrets from env file
+# Copy secrets.env.example to secrets.env and fill in values
+secretGenerator:
+- envs:
+  - secrets.env
+  name: soctalk-db-secrets
+  options:
+    disableNameSuffixHash: true
+- envs:
+  - secrets.env
+  name: soctalk-llm-secrets
+  options:
+    disableNameSuffixHash: true
+- envs:
+  - secrets.env
+  name: soctalk-soc-secrets
+  options:
+    disableNameSuffixHash: true
+
+# Override images with your registry
+# Example: ghcr.io/yourorg/soctalk-api:dev
+images:
+- name: REGISTRY/soctalk-api
+  newName: ghcr.io/soctalk/soctalk-api
+  newTag: dev
+- name: REGISTRY/soctalk-frontend
+  newName: ghcr.io/soctalk/soctalk-frontend
+  newTag: dev
+- name: REGISTRY/soctalk-orchestrator
+  newName: ghcr.io/soctalk/soctalk-orchestrator
+  newTag: dev
+
+patches:
+  - target:
+      kind: Deployment
+      name: api
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 1
+  - target:
+      kind: Deployment
+      name: frontend
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 1
+  - target:
+      kind: Deployment
+      name: orchestrator
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 1
+
+# Development-specific labels
+labels:
+- includeSelectors: true
+  pairs:
+    environment: dev

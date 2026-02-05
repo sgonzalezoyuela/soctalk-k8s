@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: soctalk
+  labels:
+    app.kubernetes.io/name: soctalk
+    app.kubernetes.io/part-of: soctalk

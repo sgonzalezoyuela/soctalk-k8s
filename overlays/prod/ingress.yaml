@@ -1,0 +1,40 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: soctalk-ingress
+  labels:
+    app.kubernetes.io/name: soctalk-ingress
+  annotations:
+    # Adjust annotations based on your ingress controller
+    # nginx.ingress.kubernetes.io/rewrite-target: /
+    # cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx  # Change to your ingress class
+  tls:
+    - hosts:
+        - soctalk.example.com
+        - api.soctalk.example.com
+      secretName: soctalk-tls
+  rules:
+    # Frontend
+    - host: soctalk.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 5173
+    # API
+    - host: api.soctalk.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api
+                port:
+                  number: 8000

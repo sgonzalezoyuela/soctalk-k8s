@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Mock endpoint component for testing
+# Add this to any overlay with: components: [../../components/mock-endpoint]
+
+resources:
+- configmap.yaml
+- deployment.yaml
+
+images:
+- name: REGISTRY/soctalk-mock-endpoint
+  newName: ghcr.io/soctalk/soctalk-mock-endpoint
+  newTag: latest
+
+labels:
+- includeSelectors: true
+  pairs:
+    app.kubernetes.io/component: testing
+    app.kubernetes.io/part-of: soctalk

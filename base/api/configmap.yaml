@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+  labels:
+    app.kubernetes.io/name: api
+    app.kubernetes.io/component: backend
+data:
+  # CORS origins - override in overlays for specific domains
+  CORS_ORIGINS: "http://frontend:5173"
+  # Database settings
+  SOCTALK_DB_ENABLED: "true"
+  # Logging
+  SOCTALK_LOG_LEVEL: "INFO"
+  SOCTALK_LOG_FORMAT: "json"

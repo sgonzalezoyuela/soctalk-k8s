@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mock-endpoint
+  labels:
+    app.kubernetes.io/name: mock-endpoint
+    app.kubernetes.io/component: testing
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mock-endpoint
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mock-endpoint
+        app.kubernetes.io/component: testing
+    spec:
+      containers:
+        - name: mock-endpoint
+          image: REGISTRY/soctalk-mock-endpoint:latest
+          env:
+            - name: WAZUH_MANAGER
+              valueFrom:
+                secretKeyRef:
+                  name: soctalk-soc-secrets
+                  key: WAZUH_URL
+                  optional: true
+          envFrom:
+            - configMapRef:
+                name: mock-endpoint-config
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            # Note: mock-endpoint may need elevated privileges for some attack simulations
+            # Only enable in controlled testing environments
+            privileged: false
+          volumeMounts:
+            - name: attack-logs
+              mountPath: /var/log/attack-simulator
+      volumes:
+        - name: attack-logs
+          emptyDir: {}
